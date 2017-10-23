@@ -9,7 +9,7 @@
 [gist]
 	private = yes
 [github]
-	user = statico
+	user = aaronscheu
 [alias]
 	am = commit --amend --no-edit
 	ama = commit --amend --no-edit -a
