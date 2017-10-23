@@ -4,8 +4,6 @@
 "  \ V /| | | | | | | | | (__
 "   \_/ |_|_| |_| |_|_|  \___|
 "
-" Ian's .vimrc file
-"
 
 " ----------------------------------------------------------------------------
 " KEY MAPS
@@ -49,32 +47,6 @@ nmap <C-e> :e#<CR>
 nmap <C-n> :bnext<CR>
 nmap <C-p> :bprev<CR>
 
-" Emacs-like bindings in normal mode
-nmap <C-x>0 <C-w>c
-nmap <C-x>1 <C-w>o
-nmap <C-x>1 <C-w>s
-nmap <C-x>1 <C-w>v
-nmap <C-x>o <C-w><C-w>
-nmap <M-o>  <C-w><C-w>
-
-" Emacs-like bindings in insert mode
-imap <C-e> <C-o>$
-imap <C-a> <C-o>0
-
-" Emacs-like bindings in the command line from `:h emacs-keys`
-cnoremap <C-a>  <Home>
-cnoremap <C-b>  <Left>
-cnoremap <C-f>  <Right>
-cnoremap <C-d>  <Del>
-cnoremap <C-e>  <End>
-cnoremap <M-b>  <S-Left>
-cnoremap <M-f>  <S-Right>
-cnoremap <M-d>  <S-right><Delete>
-cnoremap <Esc>b <S-Left>
-cnoremap <Esc>f <S-Right>
-cnoremap <Esc>d <S-right><Delete>
-cnoremap <C-g>  <C-c>
-
 " Use the space key to toggle folds
 nnoremap <space> za
 vnoremap <space> zf
@@ -102,24 +74,6 @@ nmap <Leader>z z=1<CR><CR>
 " Fix annoyances in the QuickFix window, like scrolling too much
 autocmd FileType qf setlocal number nolist scrolloff=0
 autocmd Filetype qf wincmd J " Makes sure it's at the bottom of the vim window
-
-" Commands to send common keystrokes using tmux
-let g:tmux_console_pane = '0:0.0'
-let g:tmux_server_pane = '0:0.0'
-function TmuxPaneRepeat()
-  write
-  silent execute ':!tmux send-keys -t' g:tmux_console_pane 'C-p' 'C-j'
-  redraw!
-endfunction
-function TmuxPaneClear()
-  silent execute ':!tmux send-keys -t' g:tmux_server_pane 'C-j' 'C-j' 'C-j' 'C-j' 'C-j' 'C-j' 'C-j'
-  redraw!
-endfunction
-
-" These are things that I mistype and want ignored.
-nmap Q  <silent>
-nmap q: <silent>
-nmap K  <silent>
 
 " Make the cursor stay on the same line when window switching
 function! KeepCurrentLine(motion)
