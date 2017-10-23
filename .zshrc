@@ -1,9 +1,4 @@
 # vim:ft=zsh:ts=2:sw=2:sts:et:
-#   ___           _      ____   _       ___           __ _
-#  |_ _|__ _ _ _ ( )___ |_  /__| |_    / __|___ _ _  / _(_)__ _
-#   | |/ _` | ' \|/(_-<  / /(_-< ' \  | (__/ _ \ ' \|  _| / _` |
-#  |___\__,_|_||_| /__/ /___/__/_||_|  \___\___/_||_|_| |_\__, |
-#                                                         |___/
 
 # INTERNAL UTILITY FUNCTIONS {{{1
 
@@ -18,76 +13,10 @@ _try() {
   return $( eval $* >/dev/null 2>&1 )
 }
 
-# Returns whether the current host type is what we think it is. (HOSTTYPE is
-# set later.)
-_is() {
-  return $( [ "$HOSTTYPE" = "$1" ] )
-}
-
-# Returns whether out terminal supports color.
-_color() {
-  return $( [ -z "$INSIDE_EMACS" ] )
-}
-
 # ENVIRONMENT VARIABLES {{{1
 
-# Yes, this defeats the point of the TERM variable, but everything pretty much
-# uses modern ANSI escape sequences. I've found that forcing everything to be
-# "rxvt" just about works everywhere. (If you want to know if you're in screen,
-# use SHLVL or TERMCAP.)
-if _color; then
-  if [ -n "$ITERM_SESSION_ID" ]; then
-    if [ "$TERM" = "screen" ]; then
-      export TERM=screen-256color
-    else
-      export TERM=xterm-256color
-    fi
-  elif [ "$TERM_PROGRAM" = "Apple_Terminal" ]; then
-      export TERM=xterm-256color
-  else
-    export TERM=rxvt
-  fi
-else
-  export TERM=xterm
-fi
-
-# Utility variables.
-if which hostname >/dev/null 2>&1; then
-  HOSTNAME=`hostname`
-elif which uname >/dev/null 2>&1; then
-  HOSTNAME=`uname -n`
-else
-  HOSTNAME=unknown
-fi
-export HOSTNAME
-
-# HOSTTYPE = { Linux | OpenBSD | SunOS | etc. }
-if which uname >/dev/null 2>&1; then
-  HOSTTYPE=`uname -s`
-else
-  HOSTTYPE=unknown
-fi
-export HOSTTYPE
-
-# PAGER
-if [ -n "$INSIDE_EMACS" ]; then
-  export PAGER=cat
-else
-  if _has less; then
-    export PAGER=less
-    if _color; then
-      export LESS='-R'
-    fi
-  fi
-fi
-
-# EDITOR
-if _has vim; then
-  export EDITOR=vim VISUAL=vim
-elif _has vi; then
-  export EDITOR=vi VISUAL=vi
-elif _has emacs; then
-  export EDITOR=emacs VISUAL=emacs
+if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
+  source /etc/profile.d/vte.sh
 fi
 
 # Overridable locale support.
@@ -112,25 +41,6 @@ if [ -n "$HISTFILE" -a ! -w $HISTFILE ]; then
   echo
   echo "[31;1m HISTFILE [$HISTFILE] not writable! [0m"
   echo
-fi
-
-# APPLICATION CUSTOMIZATIONS {{{1
-
-# GNU grep
-if _color; then
-  export GREP_COLOR='1;32'
-fi
-
-# Ack is better than grep
-if ! _color; then
-  alias ack='ack --nocolor'
-fi
-
-# GNU and BSD ls colorization.
-if _color; then
-  export LS_COLORS='no=00:fi=00:di=01;34:ln=01;36:pi=33:so=01;35:bd=33;01:cd=33;01:or=01;05;37;41:mi=01;37;41:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:'
-  export LSCOLORS='ExGxFxdxCxDxDxcxcxxCxc'
-  export CLICOLOR=1
 fi
 
 # PATH MODIFICATIONS {{{1
@@ -189,8 +99,6 @@ alias d='docker'
 alias df='df -H'
 alias dls='dpkg -L'
 alias dsl='dpkg -l | grep -i'
-alias e='emacs'
-alias ec='emacsclient --no-wait'
 alias f='fg'
 alias f1="awk '{print \$1}'"
 alias f2="awk '{print \$2}'"
@@ -294,18 +202,6 @@ for c in cp rm chmod chown rename; do
   alias $c="$c -v"
 done
 
-# Make sure vim/vi always gets us an editor.
-if _has vim; then
-  alias vi=vim
-  vs() { vim +"NERDTree $1" }
-  gvs() { gvim +"NERDTree $1" }
-else
-  alias vim=vi
-fi
-if ! _has gvim && _is Darwin; then
-  alias gvim='open -a "MacVim"'
-fi
-
 # The Silver Searcher is even faster than Ack.
 # https://github.com/ggreer/the_silver_searcher
 if _has ag; then
@@ -319,129 +215,6 @@ for i in /usr/share/vim/vim*/macros/less.sh(N) ; do
   alias v="$i"
 done
 
-# Linux should definitely have Gnu coreutils, right?
-if _is Linux; then
-  if _color && _try ls --color; then
-    alias ls='ls --color'
-  fi
-fi
-
-if _is Darwin; then
-  alias strace='sudo dtruss -f sudo -u $USER'
-fi
-
-# FUNCTIONS {{{1
-
-# ack is really useful. I usually look for code and then edit all of the files
-# containing that code. Changing `ack' to `vack' does this for me.
-if _has ag; then
-  vack() {
-    vim `ag --nocolor -l $@`
-  }
-else
-  vack() {
-    vim `ack -l $@`
-  }
-fi
-
-# ..same thing with gg.
-vgg() {
-  vim `gg -l $@`
-}
-
-# Quick commands to sync CWD between terminals.
-pin() {
-  rm -f ~/.pindir
-  echo $PWD >~/.pindir
-  chmod 0600 ~/.pindir >/dev/null 2>&1
-}
-pout() {
-  cd `cat ~/.pindir`
-}
-
-# A quick grep-for-processes.
-psl() {
-  if _is SunOS; then
-    ps -Af | grep -i $1 | grep -v grep
-  else
-    ps auxww | grep -i $1 | grep -v grep
-  fi
-}
-
-# Make a new command.
-vix() {
-  if [ -z "$1" ]; then
-    echo "usage: $0 <newfilename>"
-    return 1
-  fi
-  touch $1
-  chmod -v 0755 $1
-  $EDITOR $1
-}
-
-# Make a new command in ~/bin
-makecommand() {
-  if [ -z "$1" ]; then
-    echo "Gotta specify a command name, champ" >&2
-    return 1
-  fi
-
-  mkdir -p ~/bin
-  local cmd=~/bin/$1
-  if [ -e $cmd ]; then
-    echo "Command $1 already exists" >&2
-  else
-    echo "#!${2:-/bin/sh}" >$cmd
-  fi
-
-  vix $cmd
-}
-
-# View a Python module in Vim.
-vipy() {
-  p=`python -c "import $1; print $1.__file__.replace('.pyc','.py')"`
-  if [ $? = 0 ]; then
-    vi -R "$p"
-  fi
-  # errors will be printed by python
-}
-
-rxvt-title() {
-  echo -n "]2;$*"
-}
-
-screen-title() {
-  echo -n "k$*\\"
-}
-
-# Everything Git-related
-
-# Commit what's been staged, use args as message.
-gc() {
-  git commit -m "$*"
-  git log --oneline --decorate -n 10
-}
-
-# Commit everything, use args as message.
-sci() {
-  if [ $# = 0 ]; then
-    echo "usage: $0 message..." >&2
-    return 1
-  fi
-  git add -A
-  hr staging
-  git status
-  hr committing
-  git cim "$*"
-  hr results
-  git quicklog
-  hr done
-}
-
-# Don't page inside of emacs
-if [ -n "$INSIDE_EMACS" ]; then
-  alias git='git --no-pager'
-fi
 
 # ZSH-SPECIFIC COMPLETION {{{1
 
@@ -528,11 +301,6 @@ bindkey "^[n" last-command-output
 autoload -U url-quote-magic
 zle -N self-insert url-quote-magic
 
-# Turn off completion and weirdness if we're within Emacs.
-if [[ "$EMACS" = "t" ]]; then
-  unsetopt zle
-fi
-
 # Turn off slow git branch completion. http://stackoverflow.com/q/12175277/102704
 zstyle :completion::complete:git-checkout:argument-rest:headrefs command "git for-each-ref --format='%(refname)' refs/heads 2>/dev/null"
 
@@ -604,6 +372,13 @@ unsetopt extended_history
 # Job Control
 setopt notify
 
+#OH MY ZSH {{{1
+
+ZSH=$HOME/.oh-my-zsh
+ZSH_THEME="agnoster"
+plugins=(git)
+
+source $ZSH/oh-my-zsh.sh
 # PROMPT AWESOMENESS {{{1
 
 # Unfortunately, ^L makes the first line disappear. We can fix that by making
@@ -626,124 +401,8 @@ else
   __sigil="%# "
 fi
 
-# Don't use newlines in the prompt because it causes excess scrolling when
-# resizing a terminal. The solution is to have precmd() print the first line
-# and set PS1 to the second line. See: http://xrl.us/bf3wh
-
-colorprompt() {
-  if ! _color; then
-    uncolorprompt
-    return
-  fi
-
-  __prompt_mode=${1:-0}
-  local -a line1
-  line1=(
-    "%{[${__prompt_mode}m%}%~"
-    "%(1j.%{[36;1m%} ● %j jobs%{[0m%}.)"
-    "%(?..%{[31;1m%} ▲ error %?%{[0m%})"
-  )
-  local -a line2
-  line2=(
-    "%{%(!.[31;5m.[${__prompt_mode}m)%}$__sigil%{[0m%}"
-  )
-
-  # it's like temp=join("", $promptstring)
-  __first_prompt_line=${(j::)line1}
-
-  bindkey "^L" clear-screen-and-precmd
-  precmd() { print -P $__first_prompt_line }
-  PS1=${(j::)line2}
-}
-
-uncolorprompt() {
-  local -a temp
-  temp=(
-    "%m: %~"
-    "%(1j. (%j jobs).)"
-    "%(?.. (error %?%))"
-    $__newline
-    "%n $__sigil "
-  )
-  bindkey "^L" clear-screen
-  unfunction precmd &>/dev/null
-  PS1=${(j::)temp}
-}
-
-shortprompt() {
-  __prompt_mode=${__prompt_mode:-0}
-  bindkey "^L" clear-screen
-  unfunction precmd &>/dev/null
-  PS1="%{[${__prompt_mode}m%}$%{[0m%} "
-}
-
-simpleprompt() {
-  __prompt_mode=${__prompt_mode:-0}
-  bindkey "^L" clear-screen
-  unfunction precmd &>/dev/null
-  PS1="%# "
-}
-
-if [ -n "$INSIDE_EMACS" ]; then
-  unfunction colorprompt
-  unfunction uncolorprompt
-  colorprompt() { simpleprompt }
-  uncolorprompt() { simpleprompt }
-  simpleprompt
-elif [ -n "$SUDO_USER" ]; then
-  colorprompt '33;1'
-else
-  colorprompt
-fi
-
 # SSH {{{1
 
-# Create login shortcuts from SSH config file, which has 'Host' directives.
-# (If you set up an ssh host in .ssh/config, it become an alias, unless an alias
-# with that name already exists.)
-if [ -e "$HOME/.ssh/config" -a ! -e "$HOME/.ssh/skip-host-aliases" ]; then
-  for host in $(grep -E '^Host +\w+$' $HOME/.ssh/config | awk '{print $2}'); do
-    if ! _try which $host; then
-      alias $host="ssh $host"
-    fi
-  done
-fi
-
-# Override _ssh_hosts to use .ssh/config. This speeds up ssh/scp tab-completion
-# *considerably* on instalatios with lots of hosts.
-#
-# See: http://www.zsh.org/mla/users/2003/msg00937.html
-autoload _ssh ; _ssh
-_ssh_hosts() {
-  if [[ -r "$HOME/.ssh/config" ]]; then
-    local IFS="   " key host
-    while read key host; do
-      if [[ "$key" == (#i)host ]]; then
-        _wanted hosts expl host \
-          compadd -M 'm:{a-zA-Z}={A-Za-z} r:|.=* r:|=*' "$@" "$host"
-      fi
-    done < "$HOME/.ssh/config"
-  fi
-}
-
-# Set up ssh agent if I've been using `keychain`.
-for cmd in ~/bin/keychain /usr/bin/keychain; do
-  if [ -x "$cmd" ]; then
-    keychainbin=$cmd
-    break
-  fi
-done
-if [ -n $keychainbin ]; then
-  if [ -e  ~/.keychain/${HOSTNAME}-sh ]; then
-    source ~/.keychain/${HOSTNAME}-sh >/dev/null 2>&1
-  fi
-  alias agent="$keychainbin id_dsa && source ~/.keychain/$HOST-sh"
-else
-  alias agent="echo command not found: keychain"
-fi
-
-# A problem with screen is that old sessions lose ssh-agent awareness. This
-# little system fixes it.
 _fix_old_ssh_agents() {
   local agentdir=~/.latestssh
   local agentfile=$agentdir/$HOST.sh

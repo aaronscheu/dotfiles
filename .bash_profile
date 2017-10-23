@@ -19,8 +19,6 @@ alias cr2lf="perl -pi -e 's/\x0d/\x0a/gs'"
 alias df='df -H'
 alias dls='dpkg -L'
 alias dsl='dpkg -l | grep -i'
-alias e='emacs'
-alias ec='emacsclient --no-wait'
 alias f='fg'
 alias f1="awk '{print \$1}'"
 alias f2="awk '{print \$2}'"
@@ -85,17 +83,14 @@ alias ri='ri -f ansi'
 alias rls='screen -ls'
 alias rsync-usual='rsync -azv -e ssh --delete --progress'
 alias rxvt-invert="echo -n '[?5t'"
-alias rxvt-scrollbar="echo -n '[?30t'"
 alias scp='scp -C -p'
 alias screen='screen -U'
 alias slurp='wget -t 5 -c -nH -r -k -p -N --no-parent'
-alias sshx='ssh -C -c blowfish -X'
 alias st='git status'
 alias stt='git status -uall'
 alias tree="tree -F -A -I CVS"
 alias tt='tail -n 9999'
 alias wgetdir='wget -r -l1 -P035 -nd --no-parent'
-alias whois='whois -h geektools.com'
 alias x='screen -A -x'
 
 ulimit -c 0
