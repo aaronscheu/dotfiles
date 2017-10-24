@@ -6,7 +6,7 @@ set -e
 
 basedir=$HOME/.dotfiles
 bindir=$HOME/bin
-repourl=git://github.com/statico/dotfiles.git
+repourl=git://github.com/aaronscheu/dotfiles.git
 
 function symlink() {
   src=$1
@@ -34,6 +34,13 @@ if ! which git >/dev/null ; then
   echo "Error: git is not installed"
   exit 1
 fi
+
+if ! which curl >/dev/null ; then
+  echo "Error: curl is not installed"
+  exit 1
+fi
+
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
 if [ -d $basedir/.git ]; then
   echo "Updating dotfiles using existing git..."
