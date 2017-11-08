@@ -499,9 +499,5 @@ fi
 
 # }}} Done.
 
-if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
-  source /etc/profile.d/vte.sh
-fi
-
 # Don't end with errors.
 true
